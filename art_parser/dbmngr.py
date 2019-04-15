@@ -32,7 +32,8 @@ class DBManager:
         res = self.curs.fetchall()
         return res
 
-    def get_amount_of_pages(self, reg='', rooms='', price_min=None, price_max=None, desc=''):   # probably would be better to somehow combine these two heavy querries in one
+    def get_amount_of_pages(self, reg='', rooms='', price_min=None, price_max=None, desc=''):
+        # probably would be better to somehow combine these two heavy queries in one
         q = """SELECT COUNT(*) FROM articles where 
             title like '%' || ? || '%' AND 
             (CAST(SUBSTR(price, 0, LENGTH(price) - INSTR(price, ' грн/') - 1) AS INTEGER)    
@@ -84,7 +85,8 @@ class DBManager:
         """
         last_id = self._get_last_id()
         q = """INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?)"""
-        #  newest was on top, we want them to be on the bottom of database, to be able to add new records freely
+        # newest was on top, we want them to be on the bottom of database, to be able to add new records freely and to
+        # preserve order
         for art in data[::-1]:
             last_id += 1
             title, url, desc, rooms, price = art
@@ -100,11 +102,11 @@ class DBManager:
         self.curs = self.conn.cursor()
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # p = parse.DRIAParser(amt=100)
-    from pprint import pprint
-    db = DBManager("articles.db")
-    print(db.get_amount_of_pages())
+    # from pprint import pprint
+    # db = DBManager("articles.db")
+    # print(db.get_amount_of_pages())
     # pprint(db.get_data_by(60, price_min=10_000, price_max=20_000))
     # parsed_list = p.parse()
     # print(db._get_last_ref())

@@ -1,27 +1,3 @@
-"""
-Already done:
-    template for front end
-    template for apartment card
-    Extracted all required tags from DOM ria page
-
-Next to do:
-    parser: extract link to next page, add recursive parsing                    DONE.
-            save parsed data in some kind of temporary storage (mb database)    DONE.
-            ...
-    back:
-            ensure existence of 100? cards, throw away extra
-            schedule parsing to update storage (e.g. refresh storage every 10 min)
-            search on data in storage
-            ...
-    front:
-            dynamic page build with given data from storage: record in db -> card in web page
-            pagination + navigation
-            basic css
-            ...
-
-"""
-
-
 import requests
 from bs4 import BeautifulSoup as BS
 

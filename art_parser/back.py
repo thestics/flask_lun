@@ -19,7 +19,3 @@ def poll_update(path, delay=3600):
         db.conn_close()
         print(f"parser asleep for {delay/60} min...")
         time.sleep(delay)
-
-
-# if __name__ == '__main__':
-    # poll_update("articles.db")
