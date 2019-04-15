@@ -1,4 +1,5 @@
 import sqlite3
+from math import ceil
 
 
 class DBManager:
@@ -31,17 +32,28 @@ class DBManager:
         res = self.curs.fetchall()
         return res
 
+    def get_amount_of_pages(self, reg='', rooms='', price_min=None, price_max=None, desc=''):   # probably would be better to somehow combine these two heavy querries in one
+        q = """SELECT COUNT(*) FROM articles where 
+            title like '%' || ? || '%' AND 
+            (CAST(SUBSTR(price, 0, LENGTH(price) - INSTR(price, ' грн/') - 1) AS INTEGER)    
+            BETWEEN ? and ?) AND 
+            SUBSTR(rooms, 0, LENGTH(rooms) - INSTR(rooms, ' к'))  LIKE '%' || ? || '%' AND
+            descr like '%' || ? || '%'"""
+        self.curs.execute(q,
+                          (reg, price_min, price_max, rooms, desc))
+        return ceil(self.curs.fetchone()[0] / self.recordsPerPage)
+
     def get_data_by(self, offset, reg='', rooms='', price_min=None, price_max=None, desc=''):
         """
         Pagination-oriented method for querying data for a current page
-        Designed to retrieve all records in database by-default.
+        Designed to retrieve all records in database by-default (with no arguments provided).
 
         :param offset:if we need data for n-th page, (n-1) is to be provided
         :param reg:     string from "region" field in form
         :param rooms:   string from "rooms" field in form
         :param price_min: A little deviation is to be added to price string from field in form (+- 1-2k for instance).
                         Though in task description only one field for price was defined, imo it will be much more
-                        convenient for user to get records not only with strict match on string provided and
+                        convenient for user to get records not only with strict match on string provided by form and
                         string stored in 'price' column in database
         :param desc:    string from 'description' column in form
         :return:    list of tuples - matched records from database
@@ -92,6 +104,7 @@ if __name__ == '__main__':
     # p = parse.DRIAParser(amt=100)
     from pprint import pprint
     db = DBManager("articles.db")
-    pprint(db.get_data_by(60, price_min=10_000, price_max=20_000))
+    print(db.get_amount_of_pages())
+    # pprint(db.get_data_by(60, price_min=10_000, price_max=20_000))
     # parsed_list = p.parse()
     # print(db._get_last_ref())
