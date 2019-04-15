@@ -8,11 +8,11 @@ app = Flask(__name__)
 
 
 app.config['SECRET_KEY'] = 'abc'
-form_vals = {'reg': '','pMin': 0, 'pMax':10_000_000 ,'rooms': '','desc': ''}
+form_vals = {'reg': '','pMin': 0, 'pMax':10_000_000_000 ,'rooms': '','desc': ''}
 
 
 @app.route('/', methods=['GET', 'POST'])
-def hello_world():
+def home_route():
     global form_vals
     db = art_parser.DBManager('art_parser/articles.db')
     form = SearchForm()
@@ -25,6 +25,9 @@ def hello_world():
         if price:
             pMin = int(price) - 1000
             pMax = int(price) + 1000
+        else:
+            pMin = 0
+            pMax = 10_000_000_000
         pg = 1
         new_args = {'reg': reg,'pMin': pMin, 'pMax': pMax, 'rooms': rooms,'desc': desc}
         form_vals = new_args
