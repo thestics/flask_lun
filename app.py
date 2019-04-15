@@ -7,7 +7,7 @@ import os
 
 
 app = Flask(__name__)
-
+app.config['SECRET_KEY'] = 'abc'
 priceMax = 10_000_000_000
 form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': ''}
 
