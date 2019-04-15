@@ -1,7 +1,15 @@
-from app import app, init_page_amt, ensure_post_secret_key, ensure_table_existence
+from app import app, init_page_amt, ensure_table_existence
 import os
 import art_parser
 from threading import Thread
+from secrets import token_bytes
+from base64 import b64encode
+
+
+def ensure_post_secret_key():
+    rand_bytes = token_bytes()
+    rand_token = b64encode(rand_bytes).decode()
+    app.config['SECRET_KEY'] = rand_token
 
 
 if __name__ == '__main__':

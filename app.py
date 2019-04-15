@@ -3,8 +3,6 @@ import art_parser
 from threading import Thread
 from sqlite3 import OperationalError
 from form import SearchForm
-from secrets import token_bytes
-from base64 import b64encode
 import os
 
 
@@ -65,10 +63,7 @@ def ensure_table_existence():
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
 
 
-def ensure_post_secret_key():
-    rand_bytes = token_bytes()
-    rand_token = b64encode(rand_bytes).decode()
-    app.config['SECRET_KEY'] = rand_token
+
 
 
 if __name__ == '__main__':
