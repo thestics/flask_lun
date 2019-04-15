@@ -11,7 +11,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'abc'
 priceMax = 10_000_000_000
-form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': ''}
+form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': '50'}
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -65,6 +65,7 @@ def ensure_table_existence():
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
 
 def ensure_post_secret_key():
+    global app
     rand_bytes = token_bytes()
     rand_token = b64encode(rand_bytes).decode()
     app.config['SECRET_KEY'] = rand_token
