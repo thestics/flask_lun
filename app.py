@@ -3,13 +3,14 @@ import art_parser
 from threading import Thread
 from sqlite3 import OperationalError
 from form import SearchForm
+from secrets import token_bytes
+from base64 import b64encode
 import os
 
 
 app = Flask(__name__)
 
 priceMax = 10_000_000_000
-app.config['SECRET_KEY'] = 'abc'
 form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': ''}
 
 
@@ -63,10 +64,16 @@ def _ensure_table_existence():
         db.conn.execute(
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
 
-# TODO: fix pagination
+
+def _enshure_post_secret_key():
+    rand_bytes = token_bytes()
+    rand_token = b64encode(rand_bytes).decode()
+    app.config['SECRET_KEY'] = rand_token
+
 
 if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
+    _enshure_post_secret_key()
     _ensure_table_existence()
     _init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
