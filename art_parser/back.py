@@ -8,7 +8,7 @@ def poll_update(path, delay=3600):
     db = dbmngr.DBManager(path)
     last_ref = db.get_last_ref()
     db.conn_close()
-    parser = parse.DRIAParser(last_art_ref=last_ref, amt=100)
+    parser = parse.DRIAParser(last_art_ref=last_ref, amt=1000)
     while True:
         print("parser awake...")
         db.conn_open(path)
