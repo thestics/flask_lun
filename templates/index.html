@@ -1,12 +1,21 @@
 <!DOCTYPE HTML>
 <html lang="en-ru">
-<head>
-    <meta charset="utf-8">
-    <title>Not LUN</title>
-    <link rel="icon" href="static/favicon.ico" sizes="16x16">
-</head>
+    <head>
+        <meta charset="utf-8">
+        <title>Not LUN</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+        <link rel="icon" href="static/favicon.ico" sizes="16x16">
+    </head>
     <body>
-        <div class="filter">
+        <div class="container">
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 <fieldset>
@@ -32,7 +41,7 @@
                 </div>
             </form>
         </div>
-        <div class="card-grid">
+        <div class="container">
             {% for d in data %}
                 <div class="card">
                     <a class="card-title" href="{{ d[2]}}">{{ d[1] }}</a>
@@ -42,12 +51,14 @@
                         <div class="card-price">{{ d[5] }}</div>
                     </div>
                 </div>
-            </div>
             {% endfor %}
-        <div class="pagination">
-            <a href="/?page={{ page - 1 }}">Назад</a>
-            <label>Страница {{ page }}</label>
-            <a href="/?page={{ page + 1 }}">Вперед</a>
+        </div>
+        <div class="container">
+            <ul class="pager">
+                <li><a href="/?page={{ page - 1 }}">Назад</a></li>
+                <li><label>Страница {{ page }} из {{ pgAmt }}</label></li>
+                <li><a href="/?page={{ page + 1 }}">Вперед</a></li>
+            </ul>
         </div>
     </body>
 </html>
