@@ -3,6 +3,8 @@ import art_parser
 from threading import Thread
 from sqlite3 import OperationalError
 from form import SearchForm
+from secrets import token_bytes
+from base64 import b64encode
 import os
 
 
@@ -62,7 +64,10 @@ def ensure_table_existence():
         db.conn.execute(
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
 
-
+def ensure_post_secret_key():
+    rand_bytes = token_bytes()
+    rand_token = b64encode(rand_bytes).decode()
+    app.config['SECRET_KEY'] = rand_token
 
 
 
@@ -73,6 +78,6 @@ if __name__ == '__main__':
     init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
     t2.start()
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
 
 
