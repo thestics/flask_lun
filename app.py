@@ -45,13 +45,7 @@ def _ensure_table_existence():
     except OperationalError:
         db.conn.execute(
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
-
-def __dummy(*args, **kwargs):
-    import time
-    while True:
-        print('dummy awake')
-        time.sleep(10)
-
+        
 
 if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
