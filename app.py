@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request
 import art_parser
+from threading import Thread
+from sqlite3 import OperationalError
 from form import SearchForm
 import os
 
@@ -36,6 +38,26 @@ def home_route():
     return render_template('index.html', form_vals=form_vals, page=int(pg), data=data, form=form)
 
 
+def _ensure_table_existence():
+    db = art_parser.DBManager('art_parser/articles.db')
+    try:
+        db.get_last_ref()
+    except OperationalError:
+        db.conn.execute(
+            "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
+
+def __dummy(*args, **kwargs):
+    import time
+    while True:
+        print('dummy awake')
+        time.sleep(10)
+
+
 if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
-    app.run(host='0.0.0.0', port=port, debug=True)
+    _ensure_table_existence()
+    t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 300))
+    t2.start()
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+
+
