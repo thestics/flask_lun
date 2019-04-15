@@ -68,7 +68,7 @@ class DBManager:
             (CAST(SUBSTR(price, 0, LENGTH(price) - INSTR(price, ' грн/') - 1) AS INTEGER)    
             BETWEEN ? and ?) AND 
             SUBSTR(rooms, 0, LENGTH(rooms) - INSTR(rooms, ' к'))  LIKE '%' || ? || '%' AND
-            descr like '%' || ? || '%' LIMIT ? OFFSET ?"""
+            descr like '%' || ? || '%' ORDER BY id DESC LIMIT ? OFFSET ?"""
 
         self.curs.execute(q, (reg, price_min, price_max, rooms, desc, self.recordsPerPage, offset*self.recordsPerPage))
         return self.curs.fetchall()
