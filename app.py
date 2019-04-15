@@ -10,7 +10,7 @@ app = Flask(__name__)
 
 priceMax = 10_000_000_000
 app.config['SECRET_KEY'] = 'abc'
-form_vals = {'reg': '','pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': ''}
+form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': ''}
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -24,23 +24,28 @@ def home_route():
         price = form.price.data
         rooms = form.rooms.data
         desc = form.descr.data
-        if price:
+        if rooms is None:
+            rooms = ''
+        else:
+            rooms = str(rooms)
+        if not price is None:
             pMin = int(price) - 1000
             pMax = int(price) + 1000
         else:
             pMin = 0
             pMax = priceMax
+            price = 0
         pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)
-        new_args = {'reg': reg,'pMin': pMin, 'pMax': pMax, 'rooms': rooms,'desc': desc, 'pgAmt': str(pgAmt)}
+        new_args = {'reg': reg, 'price': price,'pMin': pMin, 'pMax': pMax, 'rooms': rooms,'desc': desc, 'pgAmt': str(pgAmt)}
         form_vals = new_args
         pg = '1'
-    reg, pMin, pMax, rooms, desc, pgAmt = form_vals.values()
+    reg, price, pMin, pMax, rooms, desc, pgAmt = form_vals.values()
     if int(pg) < 1:
         pg = '1'
     elif int(pg) > int(pgAmt):
         pg = pgAmt
     data = db.get_data_by(int(pg) - 1, reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)     # y i know about python container unpacking
-    return render_template('index.html', pgAmt=pgAmt, form_vals=form_vals, page=int(pg), data=data, form=form)
+    return render_template('index.html', price=price, pgAmt=pgAmt, form_vals=form_vals, page=int(pg), data=data, form=form)
 
 
 def _init_page_amt():
