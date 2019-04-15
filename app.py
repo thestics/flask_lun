@@ -49,14 +49,14 @@ def home_route():
     return render_template('index.html', price=price, pgAmt=pgAmt, form_vals=form_vals, page=int(pg), data=data, form=form)
 
 
-def _init_page_amt():
+def init_page_amt():
     global form_vals
     db = art_parser.DBManager('art_parser/articles.db')
     amt = db.get_amount_of_pages(price_min=0, price_max=priceMax)
     form_vals['pgAmt'] = str(amt)
 
 
-def _ensure_table_existence():
+def ensure_table_existence():
     db = art_parser.DBManager('art_parser/articles.db')
     try:
         db.get_last_ref()
@@ -65,7 +65,7 @@ def _ensure_table_existence():
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
 
 
-def _enshure_post_secret_key():
+def ensure_post_secret_key():
     rand_bytes = token_bytes()
     rand_token = b64encode(rand_bytes).decode()
     app.config['SECRET_KEY'] = rand_token
@@ -73,11 +73,11 @@ def _enshure_post_secret_key():
 
 if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
-    _enshure_post_secret_key()
-    _ensure_table_existence()
-    _init_page_amt()
+    ensure_post_secret_key()
+    ensure_table_existence()
+    init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
     t2.start()
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)  # idk but not defined use_reloader causes sub-thread to run twice
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 
