@@ -10,13 +10,13 @@
         <!-- Bootstrap CSS -->
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="{{ url_for('static', 'main.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
         <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="16x16">
     </head>
     <body>
-        <div class="container">
+        <div class="container form-container">
             <form method="POST" action="">
                 {{ form.hidden_tag() }}
                 <fieldset>

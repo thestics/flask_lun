@@ -5,7 +5,7 @@ from wtforms import StringField, IntegerField, SubmitField
 class SearchForm(FlaskForm):
     region = StringField('Регион', validators=[])
     rooms = IntegerField('Количество комнат', validators=[])
-    price = IntegerField('Цена', validators=[])
+    price = IntegerField('Цена, грн.', validators=[])
     descr = StringField('Описание', validators=[])
     submit = SubmitField('Поиск', validators=[])
 
