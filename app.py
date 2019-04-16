@@ -79,6 +79,12 @@ if __name__ == '__main__':
     init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
     t2.start()
-    # app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
+else:
+    ensure_post_secret_key()
+    ensure_table_existence()
+    init_page_amt()
+    t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
+    t2.start()
 
 
