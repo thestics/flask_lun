@@ -10,9 +10,10 @@
         <!-- Bootstrap CSS -->
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="../static/main.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-        <link rel="icon" href="static/favicon.ico" sizes="16x16">
+        <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="16x16">
     </head>
     <body>
         <div class="container">
@@ -41,7 +42,7 @@
                 </div>
             </form>
         </div>
-        <div class="container">
+        <div class="container card-grid">
             {% for d in data %}
                 <div class="card">
                     <a class="card-title" href="{{ d[2]}}">{{ d[1] }}</a>
