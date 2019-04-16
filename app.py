@@ -5,55 +5,72 @@ from sqlite3 import OperationalError
 from form import SearchForm
 from secrets import token_bytes
 from base64 import b64encode
+from html import escape
 import os
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'abc'
 priceMax = 10_000_000_000
-form_vals = {'reg': '', 'price':0, 'pMin': 0, 'pMax':priceMax ,'rooms': '','desc': '', 'pgAmt': '50'}
+
+
+def _handle_form_args(reg, price, rooms, desc):
+    new_price = price
+    if rooms is None:
+        new_rooms = ''
+    else:
+        new_rooms = str(rooms)
+    if not price is None and price:
+        pMin = int(price) - 1500
+        pMax = int(price) + 1500
+    else:
+        pMin = 0
+        pMax = priceMax
+        new_price = ''
+    return reg, new_price, pMin, pMax, new_rooms, desc
+
+
+def _handle_pg(pg: str, pgAmt):
+    if int(pg) < 1:
+        res = '1'
+    elif int(pg) > pgAmt:
+        res = pgAmt
+    else:
+        res = pg
+    return res
+
+
+tail_template = "&reg={}&price={}&rooms={}&desc={}"
 
 
 @app.route('/', methods=['GET', 'POST'])
 def home_route():
-    global form_vals
-    db = art_parser.DBManager('art_parser/articles.db')
+    db = art_parser.DBManager('art_parser/articles.db')     # connect db
     form = SearchForm()
-    pg = request.args.get('page', default='1')
     if form.is_submitted():
-        reg = form.region.data
-        price = form.price.data
-        rooms = form.rooms.data
-        desc = form.descr.data
-        if rooms is None:
-            rooms = ''
-        else:
-            rooms = str(rooms)
-        if not price is None:
-            pMin = int(price) - 1000
-            pMax = int(price) + 1000
-        else:
-            pMin = 0
-            pMax = priceMax
-            price = 0
-        pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)
-        new_args = {'reg': reg, 'price': price,'pMin': pMin, 'pMax': pMax, 'rooms': rooms,'desc': desc, 'pgAmt': str(pgAmt)}
-        form_vals = new_args
+        form_params = (form.region.data, form.price.data,   # extract form params
+                        form.rooms.data, form.descr.data)
+        reg, price, pMin, pMax, rooms, desc = _handle_form_args(*form_params)
+        reg, desc = map(escape, (reg, desc))         # sanitize string params
+        tail = tail_template.format(reg, price, rooms, desc)                    # format url tail
+        pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc) # total amount of pages
+        form_vals = {'reg': reg, 'price': price, 'rooms': rooms, 'desc': desc}                      # form entered vals
         pg = '1'
-    reg, price, pMin, pMax, rooms, desc, pgAmt = form_vals.values()
-    if int(pg) < 1:
-        pg = '1'
-    elif int(pg) > int(pgAmt):
-        pg = pgAmt
+        data = db.get_data_by(0, reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)   # db request for data
+        return render_template('index.html', price=price, tail=tail, pgAmt=pgAmt, form_vals=form_vals,
+                               page=int(pg), data=data, form=form)
+    url_params = (request.args.get('reg', ''), request.args.get('price', ''),           # extract params from url
+                  request.args.get('rooms', ''), request.args.get('desc', ''))
+    reg, price, pMin, pMax, rooms, desc = _handle_form_args(*url_params)
+    reg, desc = map(escape, (reg, desc))    # sanitize string params
+    tail = tail_template.format(reg, price, rooms, desc)                                        # format url tail
+    pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)
+    pg = request.args.get('page', '1')
+    pg = _handle_pg(pg, pgAmt)                                                      # ensure 0 < page number < pgAmt + 1
+    form_vals = {'reg': reg, 'price': price, 'rooms': rooms, 'desc': desc}
     data = db.get_data_by(int(pg) - 1, reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)     # y i know about python container unpacking
-    return render_template('index.html', price=price, pgAmt=pgAmt, form_vals=form_vals, page=int(pg), data=data, form=form)
-
-
-def init_page_amt():
-    global form_vals
-    db = art_parser.DBManager('art_parser/articles.db')
-    amt = db.get_amount_of_pages(price_min=0, price_max=priceMax)
-    form_vals['pgAmt'] = str(amt)
+    return render_template('index.html', price=price, tail=tail, pgAmt=pgAmt, form_vals=form_vals,
+                           page=int(pg), data=data, form=form)
 
 
 def ensure_table_existence():
@@ -63,6 +80,7 @@ def ensure_table_existence():
     except OperationalError:
         db.conn.execute(
             "CREATE TABLE articles (id integer primary key, title text, ref text, descr text, rooms text, price text)")
+
 
 def ensure_post_secret_key():
     global app
@@ -76,14 +94,12 @@ if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
     ensure_post_secret_key()
     ensure_table_existence()
-    init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
     t2.start()
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
 else:
     ensure_post_secret_key()
     ensure_table_existence()
-    init_page_amt()
     t2 = Thread(target=art_parser.poll_update, args=('art_parser/articles.db', 900))
     t2.start()
 
