@@ -51,7 +51,7 @@ def home_route():
         form_params = (form.region.data, form.price.data,   # extract form params
                         form.rooms.data, form.descr.data)
         reg, price, pMin, pMax, rooms, desc = _handle_form_args(*form_params)
-        reg, desc = map(escape, (reg, desc))         # sanitize string params
+        reg, price, desc = map(escape, (reg, str(price),desc))         # sanitize string params
         tail = tail_template.format(reg, price, rooms, desc)                    # format url tail
         pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc) # total amount of pages
         form_vals = {'reg': reg, 'price': price, 'rooms': rooms, 'desc': desc}                      # form entered vals
@@ -62,7 +62,9 @@ def home_route():
     url_params = (request.args.get('reg', ''), request.args.get('price', ''),           # extract params from url
                   request.args.get('rooms', ''), request.args.get('desc', ''))
     reg, price, pMin, pMax, rooms, desc = _handle_form_args(*url_params)
-    reg, desc = map(escape, (reg, desc))    # sanitize string params
+    # two more params to sanitize (field format differs, so in form no text would get through,
+    # whereas here we got this params from GET request as an str, sanitization needed)
+    reg, price, rooms, desc = map(escape, (reg, str(price), str(rooms), desc))
     tail = tail_template.format(reg, price, rooms, desc)                                        # format url tail
     pgAmt = db.get_amount_of_pages(reg=reg, price_min=pMin, price_max=pMax, rooms=rooms, desc=desc)
     pg = request.args.get('page', '1')
