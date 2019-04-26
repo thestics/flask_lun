@@ -8,4 +8,3 @@ from .back import poll_update
 
 
 __all__ = ['DBManager', 'DRIAParser', 'poll_update']
-
