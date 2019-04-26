@@ -35,11 +35,8 @@ class DBManager:
     def get_amount_of_pages(self, reg='', rooms='', price_min=None, price_max=None, desc=''):
         # probably would be better to somehow combine these two heavy queries in one
         q = """SELECT COUNT(*) FROM articles where 
-            title like '%' || ? || '%' AND 
-            (CAST(SUBSTR(price, 0, LENGTH(price) - INSTR(price, ' грн/') - 1) AS INTEGER)    
-            BETWEEN ? and ?) AND 
-            SUBSTR(rooms, 0, LENGTH(rooms) - INSTR(rooms, ' к'))  LIKE '%' || ? || '%' AND
-            descr like '%' || ? || '%'"""
+            title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) AND (rooms=?) AND
+            descr like '%' || ? || '%' ORDER BY id DESC LIMIT ? OFFSET ?"""
         self.curs.execute(q,
                           (reg, price_min, price_max, rooms, desc))
         return ceil(self.curs.fetchone()[0] / self.recordsPerPage)
@@ -64,10 +61,7 @@ class DBManager:
             price_max = 10_000_000_000  # hardcoded value, hope sudden inflation won't break it all :)
 
         q = """SELECT * FROM articles where 
-            title like '%' || ? || '%' AND 
-            (CAST(SUBSTR(price, 0, LENGTH(price) - INSTR(price, ' грн/') - 1) AS INTEGER)    
-            BETWEEN ? and ?) AND 
-            SUBSTR(rooms, 0, LENGTH(rooms) - INSTR(rooms, ' к'))  LIKE '%' || ? || '%' AND
+            title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) AND (rooms=?) AND
             descr like '%' || ? || '%' ORDER BY id DESC LIMIT ? OFFSET ?"""
 
         self.curs.execute(q, (reg, price_min, price_max, rooms, desc, self.recordsPerPage, offset*self.recordsPerPage))
@@ -77,21 +71,21 @@ class DBManager:
         """
         Adds records from data list into database. Required format:
             [
-                (title1, url1, description1, rooms1, price1), ...
+                (title1, url1, description1, rooms1, price1_usd, price1_uah), ...
             ]
         Adds additional parameter date_added before inserting into database, to be able to sort by latest parsed
         data
         :return:
         """
         last_id = self._get_last_id()
-        q = """INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?)"""
+        q = """INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?, ?)"""
         # newest was on top, we want them to be on the bottom of database, to be able to add new records freely and to
         # preserve order
         for art in data[::-1]:
             last_id += 1
-            title, url, desc, rooms, price = art
-            price = '/'.join(price)
-            self.curs.execute(q, (last_id, title, url, desc, rooms, price))
+            title, url, desc, rooms, price_usd, price_uah = art
+            # price = '/'.join(price)
+            self.curs.execute(q, (last_id, title, url, desc, rooms, price_uah, price_usd))
         self.conn.commit()
 
     def conn_close(self):
