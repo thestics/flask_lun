@@ -91,7 +91,6 @@ def ensure_post_secret_key():
     app.config['SECRET_KEY'] = rand_token
 
 
-
 if __name__ == '__main__':
     port = os.environ.get("PORT", 5000)
     ensure_post_secret_key()
