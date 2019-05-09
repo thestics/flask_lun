@@ -3,38 +3,22 @@ from threading import Thread
 from secrets import token_bytes
 from base64 import b64encode
 from os import environ
-from html import escape
+
 from flask import Flask, render_template, request, url_for
+
 from art_parser import DBManager, poll_update
 from form import SearchForm
-from constants import TAIL_TEMPLATE, PATH_TO_DB, POLLING_DELAY
+from constants import TAIL_TEMPLATE, PATH_TO_DB, POLLING_DELAY, aliases, \
+                      form_default_values
 
 
 app = Flask(__name__)
-# app.config['SECRET_KEY'] = 'abc'
-priceMax = 10_000_000_000
-
-
-def _handle_form_args(reg, price, rooms, desc):
-    new_price = price
-    if rooms is None:
-        new_rooms = ''
-    else:
-        new_rooms = str(rooms)
-    if price is not None and price:
-        p_min = int(price) - 1500
-        p_max = int(price) + 1500
-    else:
-        p_min = 0
-        p_max = priceMax
-        new_price = ''
-    return reg, new_price, p_min, p_max, new_rooms, desc
 
 
 def _handle_pg(pg: str, pg_amt):
     if int(pg) < 1:
         res = '1'
-    elif int(pg) > pg_amt:
+    elif int(pg) > int(pg_amt):
         res = pg_amt
     else:
         res = pg
@@ -44,49 +28,31 @@ def _handle_pg(pg: str, pg_amt):
 @app.route('/', methods=['GET', 'POST'])
 def home_route():
     db = DBManager(PATH_TO_DB)     # connect db
-    form = SearchForm()
-    if form.is_submitted():
-        # extract form params
-        form_params = (form.region.data, form.price.data,
-                       form.rooms.data, form.descr.data)
-        reg, price, p_min, p_max, rooms, desc = _handle_form_args(*form_params)
-        # sanitize string params
-        reg, price, desc = map(escape, (reg, str(price), desc))
-        # format url tail
-        tail = TAIL_TEMPLATE.format(reg, price, rooms, desc)
-        # total amount of pages
-        pg_amt = db.get_amount_of_pages(reg=reg, price_min=p_min,
-                                        price_max=p_max, rooms=rooms, desc=desc)
-        # form entered values
-        form_values = {'reg': reg, 'price': price, 'rooms': rooms, 'desc': desc}
-        pg = '1'
-        # db request for data
-        data = db.get_data_by(0, reg=reg, price_min=p_min, price_max=p_max,
-                              rooms=rooms, desc=desc)
-        return render_template('index.html', price=price, tail=tail,
-                               pgAmt=pg_amt, form_vals=form_values,
-                               page=int(pg), data=data, form=form)
-    # extract params from url
-    url_params = (request.args.get('reg', ''), request.args.get('price', ''),
-                  request.args.get('rooms', ''), request.args.get('desc', ''))
-    reg, price, p_min, p_max, rooms, desc = _handle_form_args(*url_params)
-    # Two more params to sanitize (field format differs, so in form
-    # no text would get through, whereas here we got this params from
-    # GET request as an str, sanitization needed)
-    reg, price, rooms, desc = map(escape, (reg, str(price), str(rooms), desc))
+    form = SearchForm(request.args)
+
+    # extract form params
+    form_data = form.extract_params()
+    region, rooms, price_min, price_max, description = form_data
     # format url tail
-    tail = TAIL_TEMPLATE.format(reg, price, rooms, desc)
-    pg_amt = db.get_amount_of_pages(reg=reg, price_min=p_min, price_max=p_max,
-                                    rooms=rooms, desc=desc)
-    pg = request.args.get('page', '1')
+    tail = TAIL_TEMPLATE.format(region, price_min, price_max, rooms,
+                                description)
+    # form entered values
+    form_values = {
+        alias: value for alias, value in zip(aliases, form_data)
+    }
+    # total amount of pages
+    pg_amt = db.get_amount_of_pages(**form_values)
+
+    if form.is_submitted():
+        pg = '1'
+    else:
+        pg = request.args.get('page', '1')
+        pg = _handle_pg(pg, pg_amt)
     # ensure 0 < page number < pgAmt + 1
-    pg = _handle_pg(pg, pg_amt)
-    form_values = {'reg': reg, 'price': price, 'rooms': rooms, 'desc': desc}
-    data = db.get_data_by(int(pg) - 1, reg=reg, price_min=p_min,
-                          price_max=p_max, rooms=rooms, desc=desc)
-    return render_template('index.html', price=price, tail=tail, pgAmt=pg_amt,
-                           form_vals=form_values,
-                           page=int(pg), data=data, form=form)
+    articles_data = db.get_data_by(int(pg) - 1, **form_values)
+    return render_template('index.html', tail=tail, pg_amt=pg_amt,
+                           page=int(pg), data=articles_data, form=form,
+                           default=form_default_values)
 
 
 def ensure_table_existence():
