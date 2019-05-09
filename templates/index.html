@@ -17,24 +17,39 @@
     </head>
     <body>
         <div class="container form-container">
-            <form method="POST" action="/">
-                {{ form.hidden_tag() }}
+            <form method="GET" action="/">
+{#                {{ form.hidden_tag() }}#}
                 <fieldset>
                     <div class="form-group">
                         {{ form.region.label(class='form-control-label') }}
-                        {{ form.region(class='form-control form-control', value=form_vals['reg'] if form_vals['reg'] else '') }}
+                        {{ form.region(class='form-control form-control',
+                           value=form.region.data) }}
                     </div>
                     <div class="form-group">
-                        {{ form.price.label(class='form-control-label') }}
-                        {{ form.price(class='form-control form-control', value=form_vals['price'] if form_vals['price'] else '') }}
+                        {{ form.price_min.label(class='form-control-label') }}
+                        {{ form.price_min(class='form-control form-control',
+                           value=form.price_min.data
+                           if not form.price_min.data
+                                in [default['price_min'], None] else '') }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.price_max.label(class='form-control-label') }}
+                        {{ form.price_max(class='form-control form-control',
+                           value=form.price_max.data
+                           if not form.price_max.data
+                           in [default['price_max'], None] else '') }}
                     </div>
                     <div class="form-group">
                         {{ form.rooms.label(class='form-control-label') }}
-                        {{ form.rooms(class='form-control form-control', value=form_vals['rooms'] if form_vals['rooms'] else '') }}
+                        {{ form.rooms(class='form-control form-control',
+                           value=form.rooms.data
+                           if not form.rooms.data
+                           in [default['price_min'], None] else '') }}
                     </div>
                     <div class="form-group">
-                        {{ form.descr.label(class='form-control-label') }}
-                        {{ form.descr(class='form-control form-control', value=form_vals['desc'] if form_vals['desc'] else '') }}
+                        {{ form.description.label(class='form-control-label') }}
+                        {{ form.description(class='form-control form-control',
+                           value=form.description.data) }}
                     </div>
                 </fieldset>
                 <div class="form-group">
@@ -57,7 +72,7 @@
         <div class="container">
             <ul class="pager">
                 <li><a href="/?page={{ page - 1}}{{ tail }}">Назад</a></li>
-                <li><label>Страница {{ page }} из {{ pgAmt }}</label></li>
+                <li><label>Страница {{ page }} из {{ pg_amt }}</label></li>
                 <li><a href="/?page={{ page + 1}}{{ tail }}">Вперед</a></li>
             </ul>
         </div>
