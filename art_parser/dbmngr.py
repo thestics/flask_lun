@@ -32,18 +32,25 @@ class DBManager:
         res = self.curs.fetchall()
         return res
 
-    def get_amount_of_pages(self, reg='', rooms='', price_min=None,
-                            price_max=None, desc='') -> int:
-        q = """SELECT COUNT(*) FROM articles where 
-                title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) 
-                AND (rooms=?) AND descr like '%' || ? || '%' 
-                ORDER BY id DESC LIMIT ? OFFSET ?"""
-        self.curs.execute(q,
-                          (reg, price_min, price_max, rooms, desc))
+    def get_amount_of_pages(self, region='', rooms=0, price_min=None,
+                            price_max=None, description='') -> int:
+
+        if rooms:
+            q = """SELECT COUNT(*) FROM articles where 
+                    title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) 
+                    AND (rooms=?) AND descr like '%' || ? || '%' """
+            self.curs.execute(q,
+                              (region, price_min, price_max, rooms,
+                               description))
+        else:
+            q = """SELECT COUNT(*) FROM articles where 
+                    title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) 
+                    AND descr like '%' || ? || '%' """
+            self.curs.execute(q, (region, price_min, price_max,description))
         return ceil(self.curs.fetchone()[0] / self.records_per_page)
 
-    def get_data_by(self, offset, reg='', rooms=0, price_min=None,
-                    price_max=None, desc='', amount=None) -> list:
+    def get_data_by(self, offset, region='', rooms=0, price_min=None,
+                    price_max=None, description='', amount=None) -> list:
         """
         Pagination-oriented method for querying data for a current page.
         Designed to retrieve all records in database by-default
@@ -51,11 +58,11 @@ class DBManager:
 
         :param offset:      if we need data for n-th page,
                             (n-1) is to be provided
-        :param reg:         string from "region" field in form
+        :param region:         string from "region" field in form
         :param rooms:       string from "rooms" field in form
         :param price_min:   minimum price
         :param price_max:   maximum price
-        :param desc:        string from 'description' column in form
+        :param description:        string from 'description' column in form
         :return:    list of tuples - matched records from database
         """
 
@@ -70,15 +77,15 @@ class DBManager:
                     title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) 
                     AND (rooms=?) AND descr like '%' || ? || '%' ORDER BY id 
                     DESC LIMIT ? OFFSET ?"""
-            self.curs.execute(q, (reg, price_min, price_max, rooms, desc,
-                                  records_amount, offset*self.records_per_page))
+            self.curs.execute(q, (region, price_min, price_max, rooms, description,
+                                  records_amount, offset * self.records_per_page))
         else:
             q = """SELECT * FROM articles where 
                     title like '%' || ? || '%' AND (price_uah BETWEEN ? AND ?) 
                     AND descr like '%' || ? || '%' ORDER BY id 
                     DESC LIMIT ? OFFSET ?"""
-            self.curs.execute(q, (reg, price_min, price_max, desc,
-                                  records_amount, offset*self.records_per_page))
+            self.curs.execute(q, (region, price_min, price_max, description,
+                                  records_amount, offset * self.records_per_page))
         return self.curs.fetchall()
 
     def insert_data(self, data: list):
@@ -109,4 +116,3 @@ class DBManager:
     def conn_open(self, path):
         self.conn = sqlite3.connect(path)
         self.curs = self.conn.cursor()
-        
