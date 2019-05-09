@@ -1,6 +1,7 @@
+from math import ceil
+from time import sleep
 from . import parse
 from . import dbmngr
-import time
 
 
 def poll_update(path, delay=3600):
@@ -18,25 +19,31 @@ def poll_update(path, delay=3600):
         db.insert_data(to_add)
         db.conn_close()
         print(f"parser asleep for {delay/60} min...")
-        time.sleep(delay)
+        sleep(delay)
 
 
 class ExtendedParser(parse.DRIAParser):
 
-    def __init__(self, last_art_ref="", amt=100):
+    def __init__(self, path, last_art_ref="", amt=100):
         super().__init__(last_art_ref, amt)
+        self.db = dbmngr.DBManager(path)
 
     def check_updated_articles(self, offset: int, n: int):
         """
         Checks if any of parsed articles was updated on original website,
         if so - collects updated articles
 
-
         :param offset:
         :param n:
         :return:
         """
         pass
+
+    def _remove_head(self, parsed_data: list, last_ref: str) -> list:
+        for i, record in enumerate(parsed_data):
+            if record[2] == last_ref:   # record[2] - link
+                return parsed_data[i:]
+        return []
 
     def check_deleted_articles(self, offset: int, n: int):
         """
@@ -47,5 +54,10 @@ class ExtendedParser(parse.DRIAParser):
         :param offset: offset from start (from latest parsed article)
         :return: list - deleted articles
         """
-        pass
+        parsed_data = self.db.get_data_by(offset, amount=n)
+        ...
 
+
+if __name__ == '__main__':
+    p = ExtendedParser('art_parser/articles.db')
+    p.check_deleted_articles(0, 10)
